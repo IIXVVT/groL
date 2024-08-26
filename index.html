@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gro Rui og Leanders Eventyrbryllup</title>
+    <style>
+        @keyframes rgbEffect {
+            0% { background-color: red; }
+            33% { background-color: green; }
+            66% { background-color: blue; }
+            100% { background-color: red; }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            text-align: center;
+            display: none;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .gro-rui-img {
+            width: 200px; /* حجم ثابت لصورة Gro Rui */
+        }
+
+        .leander-img {
+            width: 150px; /* حجم أصغر لصورة Leander */
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        #showArticleButton {
+            padding: 15px 30px;
+            font-size: 18px;
+            color: #fff;
+            background-color: #333;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            animation: rgbEffect 3s infinite;
+            margin: 10px;
+        }
+
+        #showArticleButton:hover {
+            background-color: #555;
+        }
+
+        #readTextButton, #stopTextButton, #retryButton, #fullscreenButton {
+            padding: 10px 20px; /* حجم أصغر للزر */
+            font-size: 14px;
+            color: #fff;
+            background-color: #333;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        #readTextButton:hover, #stopTextButton:hover, #retryButton:hover, #fullscreenButton:hover {
+            background-color: #555;
+        }
+
+        #readTextButton, #stopTextButton, #retryButton, #fullscreenButton {
+            display: none; /* مخفيين في البداية */
+        }
+
+        .snake-container {
+            margin-top: 30px;
+            border: 2px solid #333;
+            position: relative;
+            display: none; /* مخفي في البداية */
+        }
+
+        #gameCanvas {
+            background-color: #000;
+            display: block;
+            margin: 0 auto;
+        }
+
+        #gameOverMessage {
+            display: none;
+            color: #ff0000;
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        #score {
+            color: #333;
+            font-size: 18px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <button id="showArticleButton" onclick="showArticle()">Vis artikkel</button>
+    <button id="readTextButton" onclick="startReading('en')">Les artikkel høyt på engelsk</button>
+    <button id="stopTextButton" onclick="stopReading()">Stopp lesing</button>
+
+    <div id="article" class="container">
+        <img class="gro-rui-img" src="https://media.licdn.com/dms/image/C4D03AQF9P2exE4827Q/profile-displayphoto-shrink_200_200/0/1554674631500?e=2147483647&v=beta&t=YH6gfBtLSTAIMCZQ8qQQi8AqnoFPBYXt9f_VqaFiyfM" alt="Gro Rui">
+        <h1>Gro Rui og Leanders Eventyrbryllup</h1>
+        <p id="article-no">Gro Rui, den vakre og talentfulle Miss Norge, har funnet sin livspartner i Leander. Deres kjærlighetshistorie er som hentet ut av en romantisk roman, og nylig har de to forseglet sin kjærlighet med et drømmebryllup.</p>
+        <img class="leander-img" src="https://i.ibb.co/9ZwLhD6/LEANDERR-jpg.jpg" alt="Leander">
+        <p id="article-no">Gro, kjent for sin sjarm og sitt engasjement for veldedighet, har alltid vært et forbilde for mange. Hennes ekteskap med Leander, en vellykket forretningsmann, har begeistret mange fans og følgere over hele landet.</p>
+        <p id="article-no">Sammen ser de ut til å være det perfekte paret, og deres fremtid sammen ser lys og lovende ut. Vi ønsker Gro og Leander all lykke i deres nye liv sammen!</p>
+
+        <!-- النص باللغة الإنجليزية -->
+        <div id="article-en" style="display: none;">
+            Gro Rui, the beautiful and talented Miss Norway, has found her life partner in Leander. Their love story is like something out of a romantic novel, and recently they sealed their love with a dream wedding.<br><br>
+            Gro, known for her charm and dedication to charity, has always been a role model for many. Her marriage to Leander, a successful businessman, has thrilled many fans and followers across the country.<br><br>
+            Together they seem to be the perfect couple, and their future together looks bright and promising. We wish Gro and Leander all the best in their new life together!
+        </div>
+    </div>
+
+    <!-- لعبة الثعبان -->
+    <div class="snake-container" id="snakeGame">
+        <h2>Snake Game</h2>
+        <div id="score">Score: 0</div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <button id="startGameButton">Start Game</button>
+        <button id="fullscreenButton" onclick="toggleFullscreen()">Fullscreen</button>
+        <div id="gameOverMessage">
+            Game Over! <button id="retryButton">Retry</button>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript for the article reading and stopping functionality
+        let utterance;
+
+        function showArticle() {
+            document.getElementById('article').style.display = 'block';
+            document.getElementById('showArticleButton').style.display = 'none';
+            document.getElementById('readTextButton').style.display = 'inline-block'; // viser leserknappen
+            document.getElementById('stopTextButton').style.display = 'inline-block'; // viser stoppknappen
+            document.getElementById('snakeGame').style.display = 'block'; // viser spillseksjonen
+        }
+
+        function startReading(lang) {
+            let text = '';
+            if (lang === 'no') {
+                text = document.getElementById('article-no').innerText;
+            } else {
+                text = document.getElementById('article-en').innerText;
+            }
+            
+            utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang === 'no' ? 'no-NO' : 'en-US'; // Set language
+
+            const voices = speechSynthesis.getVoices();
+            const selectedVoice = voices.find(voice => voice.lang === utterance.lang);
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
+
+            speechSynthesis.speak(utterance);
+        }
+
+        function stopReading() {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel(); // Stop reading
+            }
+        }
+
+        // JavaScript for the Snake Game
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scale = 20;
+        const rows = canvas.height / scale;
+        const columns = canvas.width / scale;
+        let snake;
+        let apple;
+        let isGameRunning = false;
+        let gameInterval;
+        let score = 0;
+
+        class Snake {
+            constructor() {
+                this.body = [{ x: Math.floor(columns / 2) * scale, y: Math.floor(rows / 2) * scale }];
+                this.direction = 'RIGHT';
+                this.nextDirection = 'RIGHT';
+                this.grow = false;
+            }
+
+            update() {
+                if (this.grow) {
+                    this.body.push({ ...this.body[this.body.length - 1] });
+                    this.grow = false;
+                }
+                const head = { ...this.body[0] };
+                this.direction = this.nextDirection;
+
+                switch (this.direction) {
+                    case 'UP':
+                        head.y -= scale;
+                        break;
+                    case 'DOWN':
+                        head.y += scale;
+                        break;
+                    case 'LEFT':
+                        head.x -= scale;
+                        break;
+                    case 'RIGHT':
+                        head.x += scale;
+                        break;
+                }
+
+                this.body.unshift(head);
+
+                if (this.collision()) {
+                    document.getElementById('gameOverMessage').style.display = 'block';
+                    isGameRunning = false;
+                    clearInterval(gameInterval); // Stop game loop
+                    return;
+                }
+
+                if (head.x === apple.position.x && head.y === apple.position.y) {
+                    this.grow = true;
+                    apple.relocate();
+                    score += 10; // Update score
+                    document.getElementById('score').innerText = 'Score: ' + score;
+                } else {
+                    this.body.pop();
+                }
+
+                this.draw();
+            }
+
+            setDirection(dir) {
+                if ((dir === 'UP' && this.direction !== 'DOWN') ||
+                    (dir === 'DOWN' && this.direction !== 'UP') ||
+                    (dir === 'LEFT' && this.direction !== 'RIGHT') ||
+                    (dir === 'RIGHT' && this.direction !== 'LEFT')) {
+                    this.nextDirection = dir;
+                }
+            }
+
+            draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas before redrawing
+                ctx.fillStyle = 'green';
+                for (const segment of this.body) {
+                    ctx.fillRect(segment.x, segment.y, scale, scale);
+                }
+            }
+
+            collision() {
+                const head = this.body[0];
+                if (head.x < 0 || head.x >= canvas.width ||
+                    head.y < 0 || head.y >= canvas.height) {
+                    return true;
+                }
+                for (let i = 1; i < this.body.length; i++) {
+                    if (head.x === this.body[i].x && head.y === this.body[i].y) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        class Apple {
+            constructor() {
+                this.position = {
+                    x: Math.floor(Math.random() * columns) * scale,
+                    y: Math.floor(Math.random() * rows) * scale
+                };
+            }
+
+            draw() {
+                ctx.fillStyle = 'red';
+                ctx.fillRect(this.position.x, this.position.y, scale, scale);
+            }
+
+            relocate() {
+                this.position = {
+                    x: Math.floor(Math.random() * columns) * scale,
+                    y: Math.floor(Math.random() * rows) * scale
+                };
+            }
+        }
+
+        function gameLoop() {
+            if (isGameRunning) {
+                snake.update();
+                apple.draw();
+            }
+        }
+
+        function startGame() {
+            snake = new Snake();
+            apple = new Apple();
+            isGameRunning = true;
+            score = 0; // Reset score
+            document.getElementById('score').innerText = 'Score: ' + score;
+            document.getElementById('gameOverMessage').style.display = 'none'; // Hide game over message
+
+            gameInterval = setInterval(gameLoop, 200); // Slow down the game
+
+            document.addEventListener('keydown', e => {
+                switch (e.key) {
+                    case 'ArrowUp':
+                        snake.setDirection('UP');
+                        break;
+                    case 'ArrowDown':
+                        snake.setDirection('DOWN');
+                        break;
+                    case 'ArrowLeft':
+                        snake.setDirection('LEFT');
+                        break;
+                    case 'ArrowRight':
+                        snake.setDirection('RIGHT');
+                        break;
+                    case 'w':
+                        snake.setDirection('UP');
+                        break;
+                    case 's':
+                        snake.setDirection('DOWN');
+                        break;
+                    case 'a':
+                        snake.setDirection('LEFT');
+                        break;
+                    case 'd':
+                        snake.setDirection('RIGHT');
+                        break;
+                }
+            });
+        }
+
+        function retryGame() {
+            startGame();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        document.getElementById('startGameButton').addEventListener('click', startGame);
+        document.getElementById('retryButton').addEventListener('click', retryGame);
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+<p15>LAGET AV ALI JR</p15>
