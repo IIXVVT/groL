@@ -120,6 +120,26 @@
             font-size: 18px;
             margin: 10px;
         }
+
+        /* For mobile controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .control-button {
+            padding: 10px;
+            font-size: 18px;
+            color: #fff;
+            background-color: #333;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            width: 60px;
+            height: 60px;
+        }
     </style>
 </head>
 <body>
@@ -153,6 +173,13 @@
         <div id="gameOverMessage">
             Game Over! <button id="retryButton">Retry</button>
         </div>
+        <!-- Controls for mobile -->
+        <div class="controls">
+            <button class="control-button" onclick="snake.setDirection('UP')">↑</button>
+            <button class="control-button" onclick="snake.setDirection('LEFT')">←</button>
+            <button class="control-button" onclick="snake.setDirection('DOWN')">↓</button>
+            <button class="control-button" onclick="snake.setDirection('RIGHT')">→</button>
+        </div>
     </div>
 
     <script>
@@ -164,41 +191,32 @@
             document.getElementById('showArticleButton').style.display = 'none';
             document.getElementById('readTextButton').style.display = 'inline-block'; // viser leserknappen
             document.getElementById('stopTextButton').style.display = 'inline-block'; // viser stoppknappen
-            document.getElementById('snakeGame').style.display = 'block'; // viser spillseksjonen
+            document.getElementById('snakeGame').style.display = 'block'; // viser snake-spillet
         }
 
-        function startReading(lang) {
-            let text = '';
-            if (lang === 'no') {
-                text = document.getElementById('article-no').innerText;
+        function startReading(language) {
+            if (utterance) {
+                utterance.text = document.getElementById('article-' + language).textContent;
             } else {
-                text = document.getElementById('article-en').innerText;
+                utterance = new SpeechSynthesisUtterance(document.getElementById('article-' + language).textContent);
+                utterance.lang = language === 'en' ? 'en-US' : 'no-NO';
+                speechSynthesis.speak(utterance);
             }
-            
-            utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang === 'no' ? 'no-NO' : 'en-US'; // Set language
-
-            const voices = speechSynthesis.getVoices();
-            const selectedVoice = voices.find(voice => voice.lang === utterance.lang);
-            if (selectedVoice) {
-                utterance.voice = selectedVoice;
-            }
-
-            speechSynthesis.speak(utterance);
         }
 
         function stopReading() {
             if (speechSynthesis.speaking) {
-                speechSynthesis.cancel(); // Stop reading
+                speechSynthesis.cancel();
             }
         }
 
-        // JavaScript for the Snake Game
+        // JavaScript for the Snake game functionality
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const scale = 20;
+        const scale = 20; // Tile size
         const rows = canvas.height / scale;
         const columns = canvas.width / scale;
+
         let snake;
         let apple;
         let isGameRunning = false;
@@ -214,11 +232,8 @@
             }
 
             update() {
-                if (this.grow) {
-                    this.body.push({ ...this.body[this.body.length - 1] });
-                    this.grow = false;
-                }
                 const head = { ...this.body[0] };
+
                 this.direction = this.nextDirection;
 
                 switch (this.direction) {
@@ -339,18 +354,6 @@
                         snake.setDirection('LEFT');
                         break;
                     case 'ArrowRight':
-                        snake.setDirection('RIGHT');
-                        break;
-                    case 'w':
-                        snake.setDirection('UP');
-                        break;
-                    case 's':
-                        snake.setDirection('DOWN');
-                        break;
-                    case 'a':
-                        snake.setDirection('LEFT');
-                        break;
-                    case 'd':
                         snake.setDirection('RIGHT');
                         break;
                 }
